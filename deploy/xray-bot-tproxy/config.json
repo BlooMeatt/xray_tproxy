@@ -1,0 +1,220 @@
+{
+  "log": {
+    "loglevel": "info"
+  },
+  "dns": {
+    "servers": [
+      "https+local://dns.google/dns-query",
+      "https+local://cloudflare-dns.com/dns-query"
+    ],
+    "queryStrategy": "UseIP"
+  },
+  "inbounds": [
+    {
+      "tag": "transparent-in",
+      "listen": "0.0.0.0",
+      "port": 12345,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "network": "tcp",
+        "followRedirect": true
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ],
+        "routeOnly": true
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy-nl",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "smile.tservice.me",
+            "port": 443,
+            "users": [
+              {
+                "id": "55818a7f-d510-40ac-bc0b-aaffaba4fcd7",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "fingerprint": "chrome",
+          "serverName": "smile.tservice.me",
+          "password": "nkAK8oUGVMKRnyqeLDREm-bltRzlKZ-whf8lD9kAV04",
+          "shortId": ""
+        }
+      }
+    },
+    {
+      "tag": "proxy-us",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "45.61.56.20",
+            "port": 443,
+            "users": [
+              {
+                "id": "55818a7f-d510-40ac-bc0b-aaffaba4fcd7",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "fingerprint": "chrome",
+          "serverName": "smile.tservice.me",
+          "password": "nkAK8oUGVMKRnyqeLDREm-bltRzlKZ-whf8lD9kAV04",
+          "shortId": ""
+        }
+      }
+    },
+    {
+      "tag": "proxy-se",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "185.159.75.71",
+            "port": 443,
+            "users": [
+              {
+                "id": "55818a7f-d510-40ac-bc0b-aaffaba4fcd7",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "fingerprint": "chrome",
+          "serverName": "smile.tservice.me",
+          "password": "nkAK8oUGVMKRnyqeLDREm-bltRzlKZ-whf8lD9kAV04",
+          "shortId": ""
+        }
+      }
+    },
+    {
+      "tag": "direct",
+      "protocol": "freedom"
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole"
+    }
+  ],
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      {
+        "inboundTag": [
+          "transparent-in"
+        ],
+        "domain": [
+          "full:apigw.intradesk.ru"
+        ],
+        "network": "tcp",
+        "balancerTag": "proxy-auto",
+        "ruleTag": "proxy-intradesk-api"
+      },
+      {
+        "protocol": [
+          "bittorrent"
+        ],
+        "outboundTag": "block",
+        "ruleTag": "block-bittorrent"
+      },
+      {
+        "domain": [
+          "geosite:category-ru",
+          "regexp:\\.ru$"
+        ],
+        "outboundTag": "block",
+        "ruleTag": "block-ru-domains"
+      },
+      {
+        "inboundTag": [
+          "transparent-in"
+        ],
+        "network": "tcp",
+        "balancerTag": "proxy-auto",
+        "ruleTag": "transparent-to-balanced-vless"
+      }
+    ],
+    "balancers": [
+      {
+        "tag": "proxy-auto",
+        "selector": [
+          "proxy-"
+        ],
+        "fallbackTag": "direct",
+        "strategy": {
+          "type": "leastLoad",
+          "settings": {
+            "expected": 2,
+            "maxRTT": "1s",
+            "baselines": [
+              "1s"
+            ],
+            "costs": [
+              {
+                "regexp": false,
+                "match": "proxy-se",
+                "value": 0.0
+              },
+              {
+                "regexp": false,
+                "match": "proxy-nl",
+                "value": 0.2
+              },
+              {
+                "regexp": false,
+                "match": "proxy-us",
+                "value": 0.5
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "burstObservatory": {
+    "subjectSelector": [
+      "proxy-"
+    ],
+    "pingConfig": {
+      "destination": "https://connectivitycheck.gstatic.com/generate_204",
+      "connectivity": "",
+      "interval": "1m",
+      "sampling": 10,
+      "timeout": "5s",
+      "httpMethod": "HEAD"
+    }
+  }
+}

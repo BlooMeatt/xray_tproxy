@@ -1,0 +1,15 @@
+[Unit]
+Description=Transparent proxy redirect for intradesk bot container via Xray
+Wants=network-online.target
+Requires=docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/xray-bot/xray-bot-firewall.sh apply
+ExecStop=/opt/xray-bot/xray-bot-firewall.sh remove
+TimeoutStartSec=60
+
+[Install]
+WantedBy=multi-user.target
